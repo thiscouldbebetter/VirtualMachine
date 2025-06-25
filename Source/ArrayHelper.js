@@ -1,7 +1,9 @@
 
+// classes
+
 class ArrayHelper
 {
-	overwriteArrayWithOther
+	static overwriteArrayWithOther
 	(
 		sourceArray,
 		sourceStartIndex,

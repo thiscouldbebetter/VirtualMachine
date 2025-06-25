@@ -4,12 +4,14 @@ class VirtualizationTest
 	{
 		var architecture = MachineArchitecture.Instances().Default;
 
+		var diskDeviceDefn = Disk.DeviceDefn();
+
 		var disk0 = new Disk
 		(
 			new Device
 			(
 				"Disk 0",
-				Disk.DeviceDefn,
+				diskDeviceDefn,
 				500, // addressInCells
 				4 // sizeInCells
 			),
@@ -22,7 +24,6 @@ class VirtualizationTest
 			architecture,
 			AssemblyLanguageSyntax.Instances().Default,
 			[
-
 				"set ax, HelloWorldText",
 				"push ax	; charToPrint",
 				"call CharPrintToScreen",
@@ -68,32 +69,27 @@ class VirtualizationTest
 			]
 		);
 
-		disk0.writeMemoryCells
-		(
-			0, // address
-			programBootStage2.toMemoryCells
-			(
-				architecture
-			)
-		);
+		var keyboardDeviceDefn = Keyboard.DeviceDefn();
 
 		var keyboard0 = new Keyboard
 		(
 			new Device
 			(
 				"Keyboard 0",
-				Keyboard.DeviceDefn,
+				keyboardDeviceDefn,
 				600, // addressInCells
 				4 // sizeInCells
 			)
 		);
+
+		var displayDeviceDefn = Display.DeviceDefn();
 
 		var display0 = new Display
 		(
 			new Device
 			(
 				"Display 0",
-				Display.DeviceDefn,
+				displayDeviceDefn,
 				1000, // addressInCells
 				2000 // sizeInCells
 			),
@@ -111,6 +107,17 @@ class VirtualizationTest
 				keyboard0.device,
 				display0.device,
 			]
+		);
+
+		// hack - Can't write to disk until the machine exists!
+
+		var programBootStage2AsMemoryCells =
+			programBootStage2.toMemoryCells(machine);
+
+		disk0.writeMemoryCells
+		(
+			0, // address
+			programBootStage2AsMemoryCells
 		);
 
 		Globals.Instance().initialize

@@ -1,30 +1,51 @@
 <html>
 <body>
 
-<script src="ArrayExtensions.js"></script>
-<script src="ArrayHelper.js"></script>
+<div id="divUi">
 
-<script src="AssemblyLanguageSyntax.js"></script>
-<script src="Coords.js"></script>
-<script src="Device.js"></script>
-<script src="DeviceDefn.js"></script>
-<script src="DevicePort.js"></script>
-<script src="Disk.js"></script>
-<script src="Display.js"></script>
-<script src="Globals.js"></script>
-<script src="Instruction.js"></script>
-<script src="InstructionSet.js"></script>
-<script src="Keyboard.js"></script>
-<script src="Machine.js"></script>
-<script src="MachineArchitecture.js"></script>
-<script src="Opcode.js"></script>
-<script src="Operand.js"></script>
-<script src="OperandDefn.js"></script>
-<script src="OperandExpressionType.js"></script>
-<script src="Program.js"></script>
-<script src="RegisterDefn.js"></script>
+	<h3>Virtual Machine</h3>
 
-<script src="VirtualizationTest.js"></script>
+	<p>
+		A virtual computer with a custom instruction set,
+		running a hardcoded program.  This is a work in progress.
+	</p>
+
+	<div id="divDisplay">
+		[Loading...]
+	</div>
+
+</div>
+
+<script type="text/javascript" src="ArrayHelper.js"></script>
+<script type="text/javascript" src="AssemblyLanguageSyntax.js"></script>
+<script type="text/javascript" src="AssemblyLanguageSyntax_Instances.js"></script>
+<script type="text/javascript" src="Coords.js"></script>
+<script type="text/javascript" src="Device.js"></script>
+<script type="text/javascript" src="DeviceDefn.js"></script>
+<script type="text/javascript" src="DevicePort.js"></script>
+<script type="text/javascript" src="Disk.js"></script>
+<script type="text/javascript" src="Disk_OperationValues.js"></script>
+<script type="text/javascript" src="Disk_PortNames.js"></script>
+<script type="text/javascript" src="Display.js"></script>
+<script type="text/javascript" src="Display_OperationValues.js"></script>
+<script type="text/javascript" src="Display_PortNames.js"></script>
+<script type="text/javascript" src="Keyboard.js"></script>
+<script type="text/javascript" src="Keyboard_PortNames.js"></script>
+<script type="text/javascript" src="Globals.js"></script>
+<script type="text/javascript" src="Instruction.js"></script>
+<script type="text/javascript" src="InstructionSet.js"></script>
+<script type="text/javascript" src="Machine.js"></script>
+<script type="text/javascript" src="MachineArchitecture.js"></script>
+<script type="text/javascript" src="MachineArchitecture_Instances.js"></script>
+<script type="text/javascript" src="Opcode.js"></script>
+<script type="text/javascript" src="Operand.js"></script>
+<script type="text/javascript" src="OperandDefn.js"></script>
+<script type="text/javascript" src="OperandExpressionType.js"></script>
+<script type="text/javascript" src="OperandExpressionType_Instances.js"></script>
+<script type="text/javascript" src="Program.js"></script>
+<script type="text/javascript" src="RegisterDefn.js"></script>
+
+<script type="text/javascript" src="VirtualizationTest.js"></script>
 
 <script type="text/javascript">
 	new VirtualizationTest().main();

@@ -28,18 +28,18 @@ class Machine
 		{
 			var device = this.devices[d];
 			device.machine = this;
-			this.devices["_" + device.address] = device;
+			// this.devices["_" + device.address] = device;
 			//device.initialize();
 		}
 
-		this.registerAbbreviationToIndexLookup = [];
+		this.registerAbbreviationToIndexLookup = new Map();
 
 		var registerDefns = this.architecture.registerDefns;
 		for (var r = 0; r < registerDefns.length; r++)
 		{
 			this.registers[r] = 0;
 			var registerDefn = registerDefns[r];
-			this.registerAbbreviationToIndexLookup[registerDefn.abbreviation] = r;
+			this.registerAbbreviationToIndexLookup.set(registerDefn.abbreviation, r);
 		}
 
 		// convenience aliases
@@ -59,11 +59,19 @@ class Machine
 			this.devices[d].initialize();
 		}
 
+		var bootProgramAsMemoryCells =
+			this.architecture.bootProgram.toMemoryCells(this);
+
 		this.memoryWriteCells
 		(
-			this.architecture.bootProgram.toMemoryCells(this.architecture),
-			0 // origin	
+			bootProgramAsMemoryCells,
+			0 // origin
 		);
+	}
+
+	deviceByAddress(addressToFind)
+	{
+		return this.devices.find(x => x.address == addressToFind);
 	}
 
 	devicesUpdate()
@@ -83,7 +91,7 @@ class Machine
 			0, 
 			this.memoryCells,
 			addressToWriteTo,
-			cellsToWrite.length
+			cellsToWrite.length	
 		);
 	}
 

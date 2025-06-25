@@ -3,11 +3,11 @@ class Globals
 {
 	static Instance()
 	{
-		if (Globals._instance == null)
+		if (this._instance == null)
 		{
-			Globals._instance = new Globals();
+			this._instance = new Globals();
 		}
-		return Globals._instance;
+		return this._instance;
 	}
 
 	initialize(millisecondsPerTick, machine)
@@ -16,11 +16,11 @@ class Globals
 
 		this.machine.boot();
 
-		setInterval(this.tick.bind(this), millisecondsPerTick);
+		setInterval(Globals.Instance().tick, millisecondsPerTick);
 	}
 
 	tick()
 	{
-		this.machine.tick();
+		Globals.Instance().machine.tick();
 	}
 }

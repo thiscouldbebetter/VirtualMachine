@@ -9,22 +9,10 @@ class OperandExpressionType
 
 	static Instances()
 	{
-		if (OperandExpressionType._instances == null)
+		if (this._instances == null)
 		{
-			OperandExpressionType._instances =
-				new OperandExpressionType_Instances();
+			this._instances = new OperandExpressionType_Instances();
 		}
-		return OperandExpressionType._instances;
-	}
-}
-
-class OperandExpressionType_Instances
-{
-	constructor()
-	{
-		this.Dereference 	= new OperandExpressionType("Dereference", 1);
-		this.Direct 		= new OperandExpressionType("Direct", 0);
-		this.Label 			= new OperandExpressionType("Label", 0);
-		this.Register 		= new OperandExpressionType("Register", 1);
+		return this._instances;
 	}
 }

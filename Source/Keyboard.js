@@ -4,69 +4,50 @@ class Keyboard
 	constructor(device)
 	{
 		this.device = device;
-		this.device.keyboard = this; // hack
+		this.device.keyboard = this;
 	}
 
 	// DeviceDefn Instance
 
-	static PortNames()
-	{
-		if (Keyboard._portNames == null)
-		{
-			Keyboard._portNames = new Keyboard_PortNames();
-		}
-		return Keyboard._portNames;
-	}
-
 	static DeviceDefn()
 	{
-		if (VirtualMachine._deviceDefn == null)
+		if (this._deviceDefn == null)
 		{
-			VirtualMachine._deviceDefn = new DeviceDefn
+			var portNames = new Keyboard_PortNames();
+
+			this._deviceDefn = new DeviceDefn
 			(
 				"Keyboard",
 				[
-					new DevicePort(Keyboard.PortNames().KeyCodePressed, 0),
+					new DevicePort(portNames.KeyCodePressed, 0),
 				],
 				// initialize
-				(device) =>
-				{
-					device.keyboard.initialize(); 
-				},
+				(device) => device.keyboard.initialize(),
 				// update
-				(device) =>
-				{
-					// todo
-				}
+				(device) => { } // todo
 			);
 		}
-		return VirtualMachine._deviceDefn;
+		return this._deviceDefn;
 	}
 
-	processKeyDown(event)
+	// Static Methods
+
+	static processKeyDown(event)
 	{
 		// todo
 		var keyCodePressed = event.keyCode;
 	}
 
-	// Device.
+	// Device Methods
 
 	initialize()
 	{
-		document.keyboard = this; // hack
-		document.onkeydown = this.processKeyDown.bind(this);
+		document.keyboard = this;
+		document.onkeydown = Keyboard.processKeyDown;
 	}
 
 	update()
 	{
 		// todo
-	}
-}
-
-class Keyboard_PortNames
-{
-	constructor()
-	{
-		this.KeyCodePressed = "KeyCodePressed";
 	}
 }

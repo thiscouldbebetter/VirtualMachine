@@ -4,6 +4,6 @@ class OperandDefn
 	constructor(sizeInBits, canBeDereference)
 	{
 		this.sizeInBits = sizeInBits;
-		this.canBeDereference = canBeDereference || false;
+		this.canBeDereference = (canBeDereference == null ? false : canBeDereference);
 	}
 }

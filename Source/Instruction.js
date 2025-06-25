@@ -21,9 +21,9 @@ class Instruction
 			- architecture.opcodeSizeInBits;
 
 		var opcodeValue = memoryCellValue >> shiftForOpcode;
-		var opcodeAsId = "_" + opcodeValue;
-		var instructionSet = architecture.instructionSet;
-		var opcode = instructionSet.valueToOpcodeLookup[opcodeAsString];
+
+		var opcode =
+			architecture.instructionSet.opcodeByValue(opcodeValue);
 
 		var operands = [];
 
@@ -61,11 +61,12 @@ class Instruction
 		return returnValue;	
 	}
 
-	toMemoryCell(architecture)
+	toMemoryCell(machine)
 	{
 		var returnValue = this.opcode.value;
 
-		var bitsUsedSoFar = architecture.opcodeSizeInBits; 
+		var architecture = machine.architecture;
+		var bitsUsedSoFar = architecture.opcodeSizeInBits;
 
 		var operandDefns = this.opcode.operandDefns;
 		for (var i = 0; i < operandDefns.length; i++)
@@ -77,9 +78,9 @@ class Instruction
 
 			bitsUsedSoFar += operandSizeInBits;
 
+			var operandAsMemoryBits = operand.toMemoryBits(machine);
 			var mask = Math.pow(2, operandSizeInBits) - 1;
-
-			returnValue += operand.toMemoryBits() & mask;
+			returnValue += operandAsMemoryBits & mask;
 		}
 
 		var bitsUnused = architecture.instructionSizeInBits - bitsUsedSoFar;

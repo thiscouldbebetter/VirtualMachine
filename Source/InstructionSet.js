@@ -6,14 +6,24 @@ class InstructionSet
 		this.name = name;
 		this.opcodes = opcodes;
 
-		this.mnemonicToOpcodeLookup = [];
-		this.valueToOpcodeLookup = [];
+		this.mnemonicToOpcodeLookup = new Map();
+		this.valueToOpcodeLookup = new Map();
 
 		for (var i = 0; i < this.opcodes.length; i++)
 		{
 			var opcode = this.opcodes[i];
-			this.mnemonicToOpcodeLookup[opcode.mnemonic] = opcode;
-			this.valueToOpcodeLookup["_" + opcode.value] = opcode;
+			this.mnemonicToOpcodeLookup.set(opcode.mnemonic, opcode);
+			this.valueToOpcodeLookup.set(opcode.value, opcode);
 		}
+	}
+
+	opcodeByMnemonic(mnemonic)
+	{
+		return this.mnemonicToOpcodeLookup.get(mnemonic);
+	}
+
+	opcodeByValue(value)
+	{
+		return this.valueToOpcodeLookup.get(value);
 	}
 }

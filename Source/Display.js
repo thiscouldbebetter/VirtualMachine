@@ -11,92 +11,82 @@ class Display
 		this.sizeInPixels = this.sizeInCharacters.clone().multiply
 		(
 			this.charSizeInPixels
-		); 
-	}
-
-	static PortNames()
-	{
-		if (Display._portNames == null)
-		{
-			Display._portNames = new Display_PortNames();
-		}
-		return Display._portNames;
-	}
-
-
-	static OperationValues()
-	{
-		if (Display._operationValues == null)
-		{
-			Display._operationValues = new Display_OperationValues();
-		}
-		return Display._operationValues;
+		);
 	}
 
 	static DeviceDefn()
 	{
-		if (Display._deviceDefn == null)
+		if (this._deviceDefn == null)
 		{
-			Display._deviceDefn = new DeviceDefn
+			var portNames = new Display_PortNames();
+			var operationValues = new Display_OperationValues();
+
+			var ports =
+			[
+				new DevicePort(portNames.OperationToPerform, 0),
+				new DevicePort(portNames.CharPosX, 1),
+				new DevicePort(portNames.CharPosY, 2),
+				new DevicePort(portNames.CharValue, 3),
+				new DevicePort(portNames.DisplayMemory, 4),
+			];
+
+			var update = (device) =>
+			{ 
+				var display = device.display;
+				var machine = device.machine;
+				var portNames = new Display_PortNames();
+				var operationValues = new Display_OperationValues();
+
+				var operationToPerform = device.portValue(portNames.OperationToPerform);
+				var charPos = new Coords
+				(
+					device.portValue(portNames.CharPosX),
+					device.portValue(portNames.CharPosY)
+				);
+				var charValue = device.portValue(portNames.CharValue);
+
+				var portDisplayMemory = this.portByName(portNames.DisplayMemory);
+				var baseAddressOfDisplayMemory = 
+					device.address
+					+ portDisplayMemory.offset;
+				var charOffset =
+					charPos.y * display.sizeInCharacters.x + charPos.x;
+				var charAddress = 
+					baseAddressOfDisplayMemory
+					+ charOffset;
+
+				if (operationToPerform == Display.OperationValues.Read)
+				{
+					// todo
+				}
+				else if (operationToPerform == Display.OperationValues.Write)
+				{	
+					machine.memoryCells[charAddress] = charValue;
+					display.update(this);
+				}
+			};
+
+			this._deviceDefn = new DeviceDefn
 			(
 				"Display",
-				[
-					new DevicePort(Display.PortNames.OperationToPerform, 0),
-					new DevicePort(Display.PortNames.CharPosX, 1),
-					new DevicePort(Display.PortNames.CharPosY, 2),
-					new DevicePort(Display.PortNames.CharValue, 3),
-					new DevicePort(Display.PortNames.DisplayMemory, 4),
-				],
+				ports,
 				// initialize
-				(device) =>
-				{
-					device.display.initialize(); 
-				},
-				// update
-				(device) =>
-				{ 
-					var display = device.display;
-					var machine = device.machine;
-					var portNames = Display.PortNames;
-					var operationValues = Display.OperationValues;
-
-					var operationToPerform = device.portValue(portNames.OperationToPerform);
-					var charPos = new Coords
-					(
-						device.portValue(portNames.CharPosX),
-						device.portValue(portNames.CharPosY)
-					);
-					var charValue = device.portValue(portNames.CharValue);
-
-					var baseAddressOfDisplayMemory = 
-						device.address
-						+ this.ports[portNames.DisplayMemory].offset;
-					var charOffset = charPos.y * display.sizeInCharacters.x + charPos.x;
-					var charAddress = 
-						baseAddressOfDisplayMemory
-						+ charOffset;
-
-					if (operationToPerform == Display.OperationValues.Read)
-					{
-						// todo
-					}
-					else if (operationToPerform == Display.OperationValues.Write)
-					{
-						machine.memoryCells[charAddress] = charValue;
-						display.update(this);
-					}
-				}
+				(device) => device.display.initialize(),
+				update
 			);
 		}
 
-		return Display._deviceDefn;
+		return this._deviceDefn;
 	}
 
 	// device
 
 	initialize()
 	{
-		document.body.appendChild(this.toHTMLElement());
+		var d = document;
+		var divDisplay = d.getElementById("divDisplay");
+		divDisplay.innerHTML = "";
+		divDisplay.appendChild(this.toHTMLElement());
 		this.update();
 	}
 
@@ -128,9 +118,12 @@ class Display
 		var charPos = new Coords(0, 0);
 		var charPosInPixels = new Coords(0, 0);
 
+		var portNames = new Display_PortNames();
+		var portDisplayMemory =
+			device.defn.portByName(portNames.DisplayMemory);
 		var baseAddressOfDisplayMemory = 
 			device.address
-			+ device.defn.ports[Display.PortNames.DisplayMemory].offset;
+			+ portDisplayMemory.offset;
 
 		for (var y = 0; y < this.sizeInCharacters.y; y++)
 		{
@@ -138,7 +131,7 @@ class Display
 		
 			for (var x = 0; x < this.sizeInCharacters.x; x++)
 			{
-				charPos.x = x;
+				charPos.x = x;	
 
 				charPosInPixels.overwriteWith(charPos).multiply
 				(
@@ -184,27 +177,5 @@ class Display
 		this.htmlElement = canvas;
 
 		return this.htmlElement;
-	}
-
-}
-
-class Display_OperationValues
-{
-	constructor()
-	{
-		this.Read = "0";
-		this.Write = "1";
-	}
-}
-
-class Display_PortNames
-{
-	constructor()
-	{
-		this.OperationToPerform = "OperationToPerform";
-		this.CharPosX = "CharPosX";
-		this.CharPosY = "CharPosY";
-		this.CharValue = "CharValue";
-		this.DisplayMemory = "DisplayMemory";
 	}
 }

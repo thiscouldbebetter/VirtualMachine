@@ -9,19 +9,10 @@ class AssemblyLanguageSyntax
 
 	static Instances()
 	{
-		if (AssemblyLanguageSyntax._instances == null)
+		if (this._instances == null)
 		{
-			AssemblyLanguageSyntax._instances =
-				new AssemblyLanguageSyntax_Instances();
+			this._instances = new AssemblyLanguageSyntax_Instances();
 		}
-		return AssemblyLanguageSyntax._instances;
-	}
-}
-
-class AssemblyLanguageSyntax_Instances
-{
-	constructor()
-	{
-		this.Default = new AssemblyLanguageSyntax("Default", ";");
+		return this._instances;
 	}
 }

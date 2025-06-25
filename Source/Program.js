@@ -9,13 +9,16 @@ class Program
 
 	static fromLinesAssembly
 	(
-		name, architecture, assemblyLanguageSyntax, programLines
+		name,
+		architecture,
+		assemblyLanguageSyntax,
+		programLines
 	)
 	{
 		var instructionsSoFar = [];
-		var labelToOffsetLookup = [];
-		var instructionSet = architecture.instructionSet;
-		var mnemonicToOpcodeLookup = instructionSet.mnemonicToOpcodeLookup;
+		var labelToOffsetLookup = new Map();
+		var mnemonicToOpcodeLookup =
+			architecture.instructionSet.mnemonicToOpcodeLookup;
 		var errorsSoFar = [];
 
 		for (var i = 0; i < programLines.length; i++)
@@ -59,6 +62,9 @@ class Program
 			// todo - Handle errors.
 		}
 
+		var operandExpressionTypes =
+			OperandExpressionType.Instances();
+
 		for (var i = 0; i < instructionsSoFar.length; i++)
 		{
 			var instruction = instructionsSoFar[i];
@@ -68,16 +74,13 @@ class Program
 			{
 				var operand = operands[j];
 
-				var operandExpressionTypes =
-					OperandExpressionType.Instances();
-
 				if (operand.expressionType == operandExpressionTypes.Label)
 				{
 					var label = operand.expression;
-					var offsetForLabel = labelToOffsetLookup[label];
+					var offsetForLabel = labelToOffsetLookup.get(label);
 					if (offsetForLabel == null)
 					{
-						throw "Label '" + label + "' not found!";
+						throw new Error("Label '" + label + "' not found!");
 					}
 					else
 					{
@@ -89,17 +92,21 @@ class Program
 			}
 		}
 
-		var returnValue = new Program(name, instructionsSoFar);
+		var returnValue = new Program
+		(
+			name,
+			instructionsSoFar
+		);
 
 		return returnValue;
 	}
 
 	static fromLinesAssembly_ParseLabelOrInstruction
 	(
-		programLine, 
+		programLine,
 		architecture,
 		instructionsSoFar,
-		labelToOffsetLookup, 
+		labelToOffsetLookup,
 		mnemonicToOpcodeLookup,
 		errorsSoFar
 	)
@@ -144,10 +151,10 @@ class Program
 
 	static fromLinesAssembly_ParseData
 	(
-		programLine, 
+		programLine,
 		architecture,
 		instructionsSoFar,
-		labelToOffsetLookup, 
+		labelToOffsetLookup,
 		mnemonicToOpcodeLookup,
 		errorsSoFar
 	)
@@ -226,40 +233,43 @@ class Program
 
 		var label = programLine.substring(0, indexOfColon).trim();
 
-		if (labelToOffsetLookup[label] != null)
+		if (labelToOffsetLookup.has(label) )
 		{
 			errorsSoFar.push
 			(
 				"Label already in use: '" + label + "'."
 			);
 		}
-		else if (mnemonicToOpcodeLookup[label] != null)
+		else if (mnemonicToOpcodeLookup.has(label) )
 		{
-			"Label must not be an opcode: '" + label + "'."
+			errorsSoFar.push
+			(
+				"Label must not be an opcode: '" + label + "'."
+			)
 		}
 		else
 		{
-			labelToOffsetLookup[label] = instructionsSoFar.length;
+			labelToOffsetLookup.set(label, instructionsSoFar.length);
 		}
 	}
 
 	static fromLinesAssembly_ParseInstruction
 	(
-		programLine, 
+		programLine,
 		architecture,
 		instructionsSoFar,
-		labelToOffsetLookup, 
+		labelToOffsetLookup,
 		mnemonicToOpcodeLookup,
 		errorsSoFar
 	)
 	{
-		var operandExpressionTypes = OperandExpressionType.Instances();
+		var operandExpressionTypes = OperandExpressionType.Instances;
 
 		var tokens = programLine.split(" ");
 
 		var mnemonic = tokens[0];
 
-		var opcode = mnemonicToOpcodeLookup[mnemonic];
+		var opcode = mnemonicToOpcodeLookup.get(mnemonic);
 
 		if (opcode == null)
 		{
@@ -327,6 +337,8 @@ class Program
 		instructionsSoFar.push(instruction);
 	}
 
+	// Strings.
+
 	static fromStringAssembly(architecture, programAsString)
 	{
 		var newline = "\r\n";
@@ -338,7 +350,7 @@ class Program
 		return returnValue;
 	}
 
-	static toStringAssembly(architecture)
+	toStringAssembly(architecture)
 	{
 		var returnValue = "";
 
@@ -358,17 +370,15 @@ class Program
 
 	// memory
 
-	toMemoryCells(architecture)
+	toMemoryCells(machine)
 	{
 		var returnValue = [];
 
 		for (var i = 0; i < this.instructions.length; i++)
 		{
 			var instruction = this.instructions[i];
-			var instructionAsMemoryCell = instruction.toMemoryCell
-			(
-				architecture
-			);
+			var instructionAsMemoryCell =
+				instruction.toMemoryCell(machine);
 			returnValue.push(instructionAsMemoryCell);
 		}
 

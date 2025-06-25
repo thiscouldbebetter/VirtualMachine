@@ -8,6 +8,11 @@ class DeviceDefn
 		this.deviceInitialize = deviceInitialize;
 		this.deviceUpdate = deviceUpdate;
 
-		this.ports.addLookups("name");
+		this.portsByName = new Map(this.ports.map(x => [x.name, x]) );
+	}
+
+	portByName(name)
+	{
+		return this.portsByName.get(name);
 	}
 }

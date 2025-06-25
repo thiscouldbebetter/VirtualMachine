@@ -13,10 +13,9 @@ class Device
 
 	portValue(portName)
 	{
-		var memoryCellIndex =
-			this.address + this.defn.ports[portName].offset;
-		var returnValue = this.machine.memoryCells[memoryCellIndex];
-		return returnValue;
+		var port = this.defn.portByName(portName);
+		var memoryCellIndex = this.address + port.offset;
+		return this.machine.memoryCells[memoryCellIndex];
 	}
 
 	initialize()
