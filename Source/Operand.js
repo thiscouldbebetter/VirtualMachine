@@ -245,7 +245,7 @@ class Operand
 		return returnValue;
 	}
 
-	v()
+	value()
 	{
 		var returnValue;
 

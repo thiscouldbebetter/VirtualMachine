@@ -7,6 +7,11 @@ class Opcode
 		this.mnemonic = mnemonic;
 		this.value = value;
 		this.operandDefns = operandDefns;
-		this.run = run;
+		this._run = run;
+	}
+
+	run(machine, operands)
+	{
+		this._run(machine, operands);
 	}
 }

@@ -82,11 +82,11 @@ class Disk
 		);
 	}
 
-	writeFromMemory(machineAddress, diskAddress, numberOfCellsToWrite)
+	writeFromMemory(machine, machineAddress, diskAddress, numberOfCellsToWrite)
 	{
 		ArrayHelper.overwriteArrayWithOther
 		(
-			this.machine.memoryCells,
+			this.device.machine.memoryCells,
 			machineAddress,
 			this.memoryCells,
 			diskAddress,

@@ -32,41 +32,35 @@ class Machine
 			//device.initialize();
 		}
 
-		this.registerAbbreviationToIndexLookup = new Map();
-
 		var registerDefns = this.architecture.registerDefns;
-		for (var r = 0; r < registerDefns.length; r++)
-		{
-			this.registers[r] = 0;
-			var registerDefn = registerDefns[r];
-			this.registerAbbreviationToIndexLookup.set(registerDefn.abbreviation, r);
-		}
 
-		// convenience aliases
+		this.registers =
+			registerDefns.map(x => new Register(x) );
 
-		this.defn = this.architecture;
-		this.reg = this.registers;
-		this.ri = this.registerAbbreviationToIndexLookup;
-		this.mem = this.memoryCells;
+		this.registersByAbbreviation = new Map
+		(
+			this.registers.map(x => [x.defn.abbreviation, x] )
+		);
 	}
 
 	boot()
 	{
-		this.reg[this.ri.sp] = this.memoryCellOffsetForDevices - 1;
+		// Set the stack pointer to the max allowed value.
+		var sp = this.registerStackPointer();
+		sp.valueSet(this.memoryCellOffsetForDevices - 1);
 
-		for (var d = 0; d < this.devices.length; d++)
-		{
-			this.devices[d].initialize();
-		}
+		this.devices.forEach(x => x.initialize() );
 
-		var bootProgramAsMemoryCells =
-			this.architecture.bootProgram.toMemoryCells(this);
-
-		this.memoryWriteCells
+		this.programWriteToMemoryCellsAtOffset
 		(
-			bootProgramAsMemoryCells,
-			0 // origin
+			this.architecture.bootProgram,
+			0
 		);
+	}
+
+	deviceAtIndex(index)
+	{
+		return this.devices[index];
 	}
 
 	deviceByAddress(addressToFind)
@@ -83,6 +77,11 @@ class Machine
 		}
 	}
 
+	memoryCellAtIndexSetToValue(memoryCellIndex, value)
+	{
+		this.memoryCells[memoryCellIndex] = value;
+	}
+
 	memoryWriteCells(cellsToWrite, addressToWriteTo)
 	{
 		ArrayHelper.overwriteArrayWithOther
@@ -95,17 +94,79 @@ class Machine
 		);
 	}
 
+	programWriteToMemoryCellsAtOffset(program, offset)
+	{
+		var programAsMemoryCells =
+			program.toMemoryCells(this);
+
+		this.memoryWriteCells
+		(
+			programAsMemoryCells,
+			offset
+		);
+	}
+
+	registerByAbbreviation(abbreviation)
+	{
+		return this.registersByAbbreviation.get(abbreviation);
+	}
+
+	registerWithAbbreviationSetToValue(abbreviation, valueToSet)
+	{
+		var register = 
+			this.registerByAbbreviation(abbreviation); 
+		register.valueSet(valueToSet);
+	}
+
 	tick()
 	{
-		var ip = this.reg[this.ri.ip];
-		var instructionAsMemoryCell = this.memoryCells[ip];
+		var ip = this.registerInstructionPointer();
+		var ipValue = ip.value();
+		var instructionAsMemoryCell =
+			this.memoryCells[ipValue];
 		var instruction = Instruction.fromMemoryCell
 		(
 			this.architecture,
 			instructionAsMemoryCell
 		);
-		this.reg[this.ri.ip]++;
+		ip.valueIncrement();
 
 		instruction.run(this);
 	}
+
+	// Convenience abbreviations.
+
+	memoryCellAtIndex(memoryCellIndex)
+	{
+		return this.memoryCells[memoryCellIndex];
+	}
+
+	memoryCellAtIndexValue(memoryCellIndex, value)
+	{
+		this.memoryCells[memoryCellIndex] = value;
+		return this;
+	}
+
+	registerAtIndex(registerIndex)
+	{
+		return this.registers[registerIndex];
+	}
+
+	// registers
+
+	registerCodeSegment()
+	{
+		return this.registerByAbbreviation("cs");
+	}
+
+	registerInstructionPointer()
+	{
+		return this.registerByAbbreviation("ip");
+	}
+
+	registerStackPointer()
+	{
+		return this.registerByAbbreviation("sp");
+	}
+
 }
