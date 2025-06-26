@@ -129,9 +129,8 @@ class Machine
 			this.architecture,
 			instructionAsMemoryCell
 		);
-		ip.valueIncrement();
-
 		instruction.run(this);
+		ip.valueIncrement();
 	}
 
 	// Convenience abbreviations.

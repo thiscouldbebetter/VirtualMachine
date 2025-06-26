@@ -18,8 +18,8 @@ class Display
 	{
 		if (this._deviceDefn == null)
 		{
-			var portNames = new Display_PortNames();
-			var operationValues = new Display_OperationValues();
+			var portNames = Display_PortNames.Instance();
+			var operationValues = Display_OperationValues.Instance();
 
 			var ports =
 			[
@@ -30,54 +30,58 @@ class Display
 				new DevicePort(portNames.DisplayMemory, 4),
 			];
 
-			var update = (device) =>
-			{ 
-				var display = device.display;
-				var machine = device.machine;
-				var portNames = new Display_PortNames();
-				var operationValues = new Display_OperationValues();
-
-				var operationToPerform = device.portValue(portNames.OperationToPerform);
-				var charPos = new Coords
-				(
-					device.portValue(portNames.CharPosX),
-					device.portValue(portNames.CharPosY)
-				);
-				var charValue = device.portValue(portNames.CharValue);
-
-				var portDisplayMemory = this.portByName(portNames.DisplayMemory);
-				var baseAddressOfDisplayMemory = 
-					device.address
-					+ portDisplayMemory.offset;
-				var charOffset =
-					charPos.y * display.sizeInCharacters.x + charPos.x;
-				var charAddress = 
-					baseAddressOfDisplayMemory
-					+ charOffset;
-
-				if (operationToPerform == Display.OperationValues.Read)
-				{
-					// todo
-				}
-				else if (operationToPerform == Display.OperationValues.Write)
-				{	
-					machine.memoryCells[charAddress] = charValue;
-					display.update(this);
-				}
-			};
-
 			this._deviceDefn = new DeviceDefn
 			(
 				"Display",
 				ports,
 				// initialize
 				(device) => device.display.initialize(),
-				update
+				Display.deviceUpdate
 			);
 		}
 
 		return this._deviceDefn;
 	}
+
+	static deviceUpdate(device)
+	{ 
+		var display = device.display;
+		var machine = device.machine;
+		var portNames = Display_PortNames.Instance();
+
+		var operationToPerform =
+			device.portValueByName(portNames.OperationToPerform);
+		var charPos = new Coords
+		(
+			device.portValueByName(portNames.CharPosX),
+			device.portValueByName(portNames.CharPosY)
+		);
+		var charValue = device.portValueByName(portNames.CharValue);
+
+		var portDisplayMemory =
+			this.portByName(portNames.DisplayMemory);
+		var baseAddressOfDisplayMemory = 
+			device.address
+			+ portDisplayMemory.offset;
+		var charOffset =
+			charPos.y * display.sizeInCharacters.x + charPos.x;
+		var charAddress = 
+			baseAddressOfDisplayMemory
+			+ charOffset;
+
+		var operationValues = Display_OperationValues.Instance();
+
+		if (operationToPerform == operationValues.Read)
+		{
+			throw new Error("Not yet implemented!");
+		}
+		else if (operationToPerform == operationValues.Write)
+		{
+			machine.memoryCellAtAddressSetToValue(charAddress, charValue);
+			display.update(this);
+		}
+	}
+
 
 	// device
 

@@ -11,7 +11,7 @@ class Device
 		this.machine = null;
 	}
 
-	portValue(portName)
+	portValueByName(portName)
 	{
 		var port = this.defn.portByName(portName);
 		var memoryCellIndex = this.address + port.offset;

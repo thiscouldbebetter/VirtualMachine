@@ -9,4 +9,14 @@ class Display_PortNames
 		this.CharValue = "CharValue";
 		this.DisplayMemory = "DisplayMemory";
 	}
+
+	static Instance()
+	{
+		if (this._instance == null)
+		{
+			this._instance = new Display_PortNames();
+		}
+		return this._instance;
+	}
+
 }

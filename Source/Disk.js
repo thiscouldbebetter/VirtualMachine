@@ -12,8 +12,7 @@ class Disk
 
 	static DeviceDefn()
 	{
-		var portNames = new Disk_PortNames();
-		var operationValues = new Disk_OperationValues();
+		var portNames = Disk_PortNames.Instance();
 
 		if (this._deviceDefn == null)
 		{
@@ -25,50 +24,58 @@ class Disk
 				new DevicePort(portNames.NumberOfCellsToMove, 3),
 			];
 
-			var deviceUpdate = (device) =>
-			{
-				var machine = this.machine;
-
-				var operationToPerform = device.portValue(portNames.OperationToPerform);
-
-				if (operationToPerform == operationValues.Read)
-				{
-					var diskAddress =
-						device.portValue(portNames.DiskAddress);
-					var machineAddress =
-						device.portValue(portNames.MachineAddress);
-					var numberOfCellsToMove =
-						device.portValue(portNames.NumberOfCellsToMove);
-
-					device.disk.readToMemory
-					(
-						diskAddress,
-						machineAddress,
-						numberOfCellsToMove
-					);
-				}
-				else if (operationToPerform == operationValues.Write)
-				{
-					device.disk.writeFromMemory
-					(
-						device.portValue(portNames.MachineAddress),
-						device.portValue(portNames.DiskAddress),
-						device.portValue(portNames.NumberOfCellsToMove)
-					);
-				}
-			};
-
 			this._deviceDefn = new DeviceDefn
 			(
 				"Disk",
 				ports,
 				(device) => { /* todo */ }, // deviceInitialize
-				deviceUpdate
+				Disk.deviceUpdate
 			);
 		}
 
 		return this._deviceDefn;
 	}
+
+	static deviceUpdate(device)
+	{
+		var portNames = Disk_PortNames.Instance();
+		var operationValues = Disk_OperationValues.Instance();
+
+		var machine = this.machine;
+
+		var operationToPerform =
+			device.portValueByName(portNames.OperationToPerform);
+
+		var diskAddress =
+			device.portValueByName(portNames.DiskAddress);
+		var machineAddress =
+			device.portValueByName(portNames.MachineAddress);
+		var numberOfCellsToMove =
+			device.portValueByName(portNames.NumberOfCellsToMove);
+
+		if (operationToPerform == operationValues.Read)
+		{
+			device.disk.readToMemory
+			(
+				diskAddress,
+				machineAddress,
+				numberOfCellsToMove
+			);
+		}
+		else if (operationToPerform == operationValues.Write)
+		{
+			device.disk.writeFromMemory
+			(
+				machineAddress,
+				diskAddress,
+				numberOfCellsToMove
+			);
+		}
+		else
+		{
+			throw new Error("Unrecognized disk device operation: " + operationToPerform);
+		}
+	};
 
 	readToMemory(diskAddress, machineAddress, numberOfCellsToRead)
 	{

@@ -3,6 +3,54 @@ class MachineArchitecture_Instances
 {
 	constructor()
 	{
+		var instructionSet = this.instructionSet();
+
+		var registerDefns = this.registerDefns();
+
+		var syntax = AssemblyLanguageSyntax.Instances().Default;
+
+		var bootProgramAsLines = this.bootProgramAsLines();
+
+		this.Default = new MachineArchitecture
+		(
+			"Default Machine Architecture",
+			16, // instructionSizeInBits
+			6, // opcodeSizeInBits
+			3, // operandSizeInBits
+			16, // memoryCellSizeInBits
+			registerDefns,
+			instructionSet,
+			syntax,
+			bootProgramAsLines
+		);
+	}
+
+	bootProgramAsLines()
+	{
+		var bootProgramAsLines =
+		[
+			"set ax, 0		; ax = deviceID 0 (disk)",
+			"devad si, ax 	; si = disk",
+			"mov di, si		; di = disk.operation",
+			"stori di, 0 	; disk.operation = read",
+			"addi di, 1		; di = disk.diskAddress",
+			"stori di, 0	; disk.diskAddress = 0",
+			"addi di, 1		; di = disk.memoryAddress",
+			"setbh dx, 1 	; dx = memory address for 2nd stage boot",
+			"setbl dx, 0	; (address of segment 1)",
+			"stor di, dx  	; disk.memoryAddress = 2nd stage boot",
+			"addi di, 1		; di = disk.numberOfCellsToMove",
+			"stori di, 32	; disk.numberOfCellsToMove = 32",
+			"devup ax		; disk.update()",
+			"setcs 1		; prepare to jump to segment 1",
+			"jmp 0			; to 2nd stage boot",
+		];
+
+		return bootProgramAsLines;
+	}
+
+	instructionSet()
+	{
 		var oc = Opcode;
 		var od = OperandDefn;
 		var od2 = () => new od(2);
@@ -56,6 +104,17 @@ class MachineArchitecture_Instances
 			opcodes[i].value = i;
 		}
 
+		var instructionSet = new InstructionSet
+		(
+			"Default Instruction Set",
+			opcodes
+		);
+
+		return instructionSet;
+	}
+
+	registerDefns()
+	{
 		var rd = RegisterDefn;
 
 		var registerDefns =
@@ -76,41 +135,7 @@ class MachineArchitecture_Instances
 			new rd("Comparison Result", "cr"),
 		];
 
-		var bootProgramLines = 
-		[
-			"set ax, 0	; ax = deviceID 0 (disk)",
-			"devad si, ax 	; si = disk",
-			"mov di, si	; di = disk.operation",
-			"stori di, 0 	; disk.operation = read",
-			"addi di, 1	; di = disk.diskAddress",
-			"stori di, 0	; disk.diskAddress = 0",
-			"addi di, 1	; di = disk.memoryAddress",
-			"setbh dx, 1 	; dx = memory address for 2nd stage boot",
-			"setbl dx, 0	; 	(address of segment 1)",
-			"stor di, dx  	; disk.memoryAddress = 2nd stage boot",
-			"addi di, 1	; di = disk.numberOfCellsToMove",
-			"stori di, 32	; disk.numberOfCellsToMove = 32",
-			"devup ax	; disk.update()",
-			"setcs 1	; prepare to jump to segment 1",
-			"jmp 0		; to 2nd stage boot",
-		];
-
-		this.Default = new MachineArchitecture
-		(
-			"Default Machine Architecture",
-			16, // instructionSizeInBits
-			6, // opcodeSizeInBits
-			3, // operandSizeInBits
-			16, // memoryCellSizeInBits
-			registerDefns,
-			new InstructionSet
-			(
-				"Default Instruction Set",
-				opcodes
-			),
-			AssemblyLanguageSyntax.Instances().Default,
-			bootProgramLines
-		);
+		return registerDefns;
 	}
 
 	// Opcodes.
