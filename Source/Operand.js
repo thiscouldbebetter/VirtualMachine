@@ -189,7 +189,7 @@ class Operand
 
 	toStringAssembly()
 	{
-		throw new Error("Not yet implemented!");
+		return this.expression;
 	}
 
 	toMemoryBits(machine)
@@ -222,7 +222,7 @@ class Operand
 				operandOffset = parseInt(expressionSplitOnPlusSign[1]);
 			}
 
-			var architecture = machine.architecture;
+			var architecture = machine.architecture();
 			var registerIndex =
 				architecture.registerIndexByAbbreviation(operandBaseAsString);
 
@@ -232,9 +232,13 @@ class Operand
 			}
 			else
 			{
-				var memoryCellIndex =
-					machine.registers[registerIndex] + operandOffset;
-				returnValue = machine.memoryCells[memoryCellIndex];
+				var register =
+					machine.registerAtIndex(registerIndex);
+				var registerValue = register.value();
+				var address =
+					registerValue + operandOffset;
+				returnValue =
+					machine.memoryCellAtAddress(address);
 			}
 		}
 		else
@@ -274,7 +278,7 @@ class Operand
 			}
 
 			var machine = Globals.Instance().machine; // hack
-			var architecture = machine.architecture; // hack
+			var architecture = machine.architecture(); // hack
 			var registerIndex =
 				architecture.registerIndexByAbbreviation(operandBaseAsString);
 
@@ -284,7 +288,10 @@ class Operand
 			}
 			else
 			{
-				returnValue = machine.memoryCells[machine.registers[registerIndex] + operandOffset]
+				var register = machine.registerAtIndex(registerIndex);
+				var registerValue = register.value();
+				var address = registerValue + operandOffset;
+				returnValue = machine.memoryCellAtAddress(address);
 			}
 		}
 		else

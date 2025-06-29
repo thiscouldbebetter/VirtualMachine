@@ -15,7 +15,9 @@ class Device
 	{
 		var port = this.defn.portByName(portName);
 		var memoryCellIndex = this.address + port.offset;
-		return this.machine.memoryCells[memoryCellIndex];
+		var value =
+			this.machine.memoryCellAtAddress(memoryCellIndex);
+		return value;
 	}
 
 	initialize()

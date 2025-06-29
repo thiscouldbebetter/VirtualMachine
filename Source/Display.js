@@ -7,7 +7,7 @@ class Display
 		this.device.display = this;
 		this.sizeInCharacters = sizeInCharacters;
 
-		this.charSizeInPixels = new Coords(8, 16);
+		this.charSizeInPixels = Coords.fromXY(8, 16);
 		this.sizeInPixels = this.sizeInCharacters.clone().multiply
 		(
 			this.charSizeInPixels
@@ -51,7 +51,7 @@ class Display
 
 		var operationToPerform =
 			device.portValueByName(portNames.OperationToPerform);
-		var charPos = new Coords
+		var charPos = Coords.fromXY
 		(
 			device.portValueByName(portNames.CharPosX),
 			device.portValueByName(portNames.CharPosY)
@@ -119,8 +119,8 @@ class Display
 		var device = this.device;
 		var machine = device.machine;
 
-		var charPos = new Coords(0, 0);
-		var charPosInPixels = new Coords(0, 0);
+		var charPos = Coords.create();
+		var charPosInPixels = Coords.create();
 
 		var portNames = new Display_PortNames();
 		var portDisplayMemory =
@@ -135,19 +135,21 @@ class Display
 		
 			for (var x = 0; x < this.sizeInCharacters.x; x++)
 			{
-				charPos.x = x;	
+				charPos.x = x;
 
 				charPosInPixels.overwriteWith(charPos).multiply
 				(
 					this.charSizeInPixels
 				);
 
-				var charOffset = charPos.y * this.sizeInCharacters.x + charPos.x;
+				var charOffset =
+					charPos.y * this.sizeInCharacters.x + charPos.x;
 				var charAddress = 
 					baseAddressOfDisplayMemory
 					+ charOffset;
 
-				var charValue = machine.memoryCells[charAddress];
+				var charValue =
+					machine.memoryCellAtAddress(charAddress);
 				var charToDisplay;
 
 				if (charValue == 0)

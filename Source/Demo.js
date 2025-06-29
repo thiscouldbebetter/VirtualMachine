@@ -5,47 +5,45 @@ class Demo
 		var programLines =
 		[
 			"set ax, HelloWorldText",
-			"push ax	; charToPrint",
+			"push ax    ; charToPrint",
 			"call CharPrintToScreen",
-
-			"DoNothingForever:",
-			"jmp DoNothingForever",
-
+			"halt",
+			"",
 			"HelloWorldText:",
 			"data \"Hello world!\"",
-
+			"",
 			"CharPrintToScreen:",
-			"push bp	; save bp",
-			"mov bp, sp	; save return address from stack to bp",
-			"push ax	; save registers",
+			"push bp    ; save bp",
+			"mov bp, sp ; save return address from stack to bp",
+			"push ax    ; save registers",
 			"push bx",
 			"push cx",
 			"push dx",
 			"push si",
 			"push di",
-
-			"set dx, 2 	; dx = displayID",
-			"devad si, dx 	; si = devices[displayID]",
-			"mov di, si	; di = display.operation",
-			"stori di, 1	; display.operation = write",
-			"addi di, 1	; di = display.charPosX",
-			"mov bx, di	; bx = display.charPosX",
-			"stori di, 1	; display.charPosX = 1",
-			"addi di, 1	; di = display.charPosY",
-			"stori di, 2	; display.charPosY = 2",
-			"addi di, 1	; di = display.charValue",
-			"stori di, 8	; display.charValue = 'H'",
+			"",
+			"set dx, 2      ; dx = displayID",
+			"devad si, dx   ; si = devices[displayID]",
+			"mov di, si     ; di = display.operation",
+			"stori di, 1    ; display.operation = write",
+			"addi di, 1     ; di = display.charPosX",
+			"mov bx, di     ; bx = display.charPosX",
+			"stori di, 1    ; display.charPosX = 1",
+			"addi di, 1     ; di = display.charPosY",
+			"stori di, 2    ; display.charPosY = 2",
+			"addi di, 1     ; di = display.charValue",
+			"stori di, 8    ; display.charValue = 'H'",
 			"stor di,[bp+1] ; display.charValue = charToWrite",
-			"devup dx	; display.update()",
-
-			"pop di		; restore registers",
+			"devup dx       ; display.update()",
+			"",
+			"pop di     ; restore registers",
 			"pop si", 
 			"pop dx",
 			"pop cx",
 			"pop bx",
 			"pop ax",
 			"pop bp",
-			"ret 0		; return to caller",
+			"ret 0      ; return to caller",
 		];
 
 		var newline = "\n";
@@ -54,7 +52,11 @@ class Demo
 		return programText;
 	}
 
-	static runProgramFromText(programToRunText)
+	static runProgramFromText
+	(
+		programToRunText,
+		instructionsRunShouldBeLoggedToConsole
+	)
 	{
 		var diskDeviceDefn = Disk.DeviceDefn();
 
@@ -94,7 +96,7 @@ class Demo
 				1000, // addressInCells
 				2000 // sizeInCells
 			),
-			new Coords(64, 16) // sizeInCharacters
+			Coords.fromXY(64, 16) // sizeInCharacters
 		);
 
 		var architecture = MachineArchitecture.Instances().Default;
@@ -111,6 +113,11 @@ class Demo
 				display0.device,
 			]
 		);
+
+		if (instructionsRunShouldBeLoggedToConsole)
+		{
+			machine = new MachineLogging(machine);
+		}
 
 		var syntaxDefault =
 			AssemblyLanguageSyntax.Instances().Default;

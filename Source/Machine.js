@@ -5,21 +5,22 @@ class Machine
 	(
 		name, 
 		architecture, 
-		numberOfMemoryCellsAddressable,
+		memorySizeInCells,
 		memoryCellOffsetForDevices, 
 		devices
 	)
 	{
 		this.name = name;
-		this.architecture = architecture;;
-		this.numberOfMemoryCellsAddressable = numberOfMemoryCellsAddressable;
-		this.memoryCellOffsetForDevices = memoryCellOffsetForDevices;
+		this._architecture = architecture;
+		this.memoryCellOffsetForDevices =
+			memoryCellOffsetForDevices;
 		this.devices = devices;
 
 		this.registers = [];
-		this.memoryCells = new Array(this.numberOfMemoryCellsAddressable);
+		this.memoryCells =
+			new Array(memorySizeInCells);
 
-		for (var c = 0; c < this.numberOfMemoryCellsAddressable; c++)
+		for (var c = 0; c < this.memoryCells.length; c++)
 		{
 			this.memoryCells[c] = 0;
 		}
@@ -32,7 +33,7 @@ class Machine
 			//device.initialize();
 		}
 
-		var registerDefns = this.architecture.registerDefns;
+		var registerDefns = architecture.registerDefns;
 
 		this.registers =
 			registerDefns.map(x => new Register(x) );
@@ -43,6 +44,11 @@ class Machine
 		);
 	}
 
+	architecture()
+	{
+		return this._architecture;
+	}
+
 	boot()
 	{
 		// Set the stack pointer to the max allowed value.
@@ -51,9 +57,11 @@ class Machine
 
 		this.devices.forEach(x => x.initialize() );
 
+		var architecture = this.architecture();
+
 		this.programWriteToMemoryCellsAtOffset
 		(
-			this.architecture.bootProgram,
+			architecture.bootProgram,
 			0
 		);
 	}
@@ -75,6 +83,25 @@ class Machine
 			var device = this.devices[d];
 			device.update();
 		}
+	}
+
+	instructionGetAndAdvance()
+	{
+		var ip = this.registerInstructionPointer();
+
+		var ipValue = ip.value();
+		var instructionAsMemoryCell =
+			this.memoryCellAtAddress(ipValue);
+		var architecture = this.architecture();
+		var instruction = Instruction.fromMemoryCell
+		(
+			architecture,
+			instructionAsMemoryCell
+		);
+
+		ip.valueIncrement();
+
+		return instruction;
 	}
 
 	memoryCellAtAddress(memoryCellIndex)
@@ -129,17 +156,8 @@ class Machine
 
 	tick()
 	{
-		var ip = this.registerInstructionPointer();
-		var ipValue = ip.value();
-		var instructionAsMemoryCell =
-			this.memoryCells[ipValue];
-		var instruction = Instruction.fromMemoryCell
-		(
-			this.architecture,
-			instructionAsMemoryCell
-		);
+		var instruction = this.instructionGetAndAdvance();
 		instruction.run(this);
-		ip.valueIncrement();
 	}
 
 	// Convenience abbreviations.

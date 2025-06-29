@@ -232,7 +232,7 @@ class MachineArchitecture_Instances
 	halt(machine, operands)
 	{
 		var ip = machine.registerInstructionPointer();
-		ip.decrement(); // Keep running this same instruction forever.
+		ip.valueDecrement(); // Keep running this same instruction forever.
 	}
 
 	jump(machine, operands)

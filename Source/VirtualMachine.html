@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <body>
 
@@ -11,7 +12,7 @@
 	</p>
 
 	<div>
-		<label for="">Assembly to Run:</label>
+		<label for="textareaAssembly">Assembly to Run:</label>
 		<button onclick="UiEventHandler.buttonDemo_Clicked()">
 			Load Demo
 		</button>
@@ -26,11 +27,19 @@
 		<button onclick="UiEventHandler.buttonRun_Clicked()">
 			Run
 		</button>
+		<label for="checkboxLogInstructionsRunToConsole">
+			Log Instructions Run to Console:
+		</label>
+		<input
+			id="checkboxLogInstructionsRunToConsole"
+			type="checkbox"
+			checked="false"
+		></input>
 	</div>
 
 	<div>
 		<div>
-			<label for="divDisplay">Virtual Machine Display:</label>
+			<span>Virtual Machine Display:</span>
 		</div>
 		<div id="divDisplay">
 			[Click Run to start.]
@@ -60,6 +69,7 @@
 <script type="text/javascript" src="Machine.js"></script>
 <script type="text/javascript" src="MachineArchitecture.js"></script>
 <script type="text/javascript" src="MachineArchitecture_Instances.js"></script>
+<script type="text/javascript" src="MachineLogging.js"></script>
 <script type="text/javascript" src="Opcode.js"></script>
 <script type="text/javascript" src="Operand.js"></script>
 <script type="text/javascript" src="OperandDefn.js"></script>

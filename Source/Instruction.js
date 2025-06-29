@@ -65,7 +65,7 @@ class Instruction
 	{
 		var returnValue = this.opcode.value;
 
-		var architecture = machine.architecture;
+		var architecture = machine.architecture();
 		var bitsUsedSoFar = architecture.opcodeSizeInBits;
 
 		var operandDefns = this.opcode.operandDefns;

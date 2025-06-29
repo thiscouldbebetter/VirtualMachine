@@ -7,6 +7,16 @@ class Coords
 		this.y = y;
 	}
 
+	static create()
+	{
+		return new Coords();
+	}
+
+	static fromXY(x, y)
+	{
+		return new Coords(x, y);
+	}
+
 	clone()
 	{
 		return new Coords(this.x, this.y);
