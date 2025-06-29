@@ -8,6 +8,7 @@ class MachineArchitecture
 		opcodeSizeInBits,
 		operandSizeInBits,
 		memoryCellSizeInBits,
+		segmentOffsetWidthInBits,
 		registerDefns,
 		instructionSet,
 		assemblyLanguageSyntax,
@@ -19,6 +20,7 @@ class MachineArchitecture
 		this.opcodeSizeInBits = opcodeSizeInBits;
 		this.operandSizeInBits = operandSizeInBits;
 		this.memoryCellSizeInBits = memoryCellSizeInBits;
+		this.segmentOffsetWidthInBits = segmentOffsetWidthInBits;
 		this.registerDefns = registerDefns;
 		this.instructionSet = instructionSet;
 

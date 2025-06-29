@@ -3,6 +3,11 @@ class MachineArchitecture_Instances
 {
 	constructor()
 	{
+		this.Default = this.architectureDefaultBuild();
+	}
+
+	architectureDefaultBuild()
+	{
 		var instructionSet = this.instructionSet();
 
 		var registerDefns = this.registerDefns();
@@ -11,18 +16,21 @@ class MachineArchitecture_Instances
 
 		var bootProgramText = this.bootProgramText();
 
-		this.Default = new MachineArchitecture
+		var returnValue = new MachineArchitecture
 		(
 			"Default Machine Architecture",
 			16, // instructionSizeInBits
 			6, // opcodeSizeInBits
 			3, // operandSizeInBits
 			16, // memoryCellSizeInBits
+			8, // segmentOffsetWidthInBits
 			registerDefns,
 			instructionSet,
 			syntax,
 			bootProgramText
 		);
+
+		return returnValue;
 	}
 
 	bootProgramText()
@@ -36,15 +44,14 @@ class MachineArchitecture_Instances
 			"addi di, 1     ; di = disk.diskAddress",
 			"stori di, 0    ; disk.diskAddress = 0",
 			"addi di, 1     ; di = disk.memoryAddress",
-			"setbh dx, 1    ; dh = memory address for 2nd stage boot",
-			"setbl dx, 0    ; dl = address of segment 1",
+			"sethi dx, 1    ; dh = memory address for 2nd stage boot",
+			"setlo dx, 0    ; dl = address of segment 1",
 			"stor di, dx    ; disk.memoryAddress = 2nd stage boot",
 			"addi di, 1     ; di = disk.numberOfCellsToMove",
 			"stori di, 32   ; disk.numberOfCellsToMove = 32",
 			"devup ax       ; disk.update()",
-			"setcs 1        ; prepare to jump to segment 1",
-			"jmp 0          ; to 2nd stage boot",
-			"halt           ; Upon returning, halt."
+			"setcs 1        ; prepare to jump relative to segment 1",
+			"jump 0         ; to 2nd stage boot"
 		];
 
 		var newline = "\n";
@@ -62,44 +69,47 @@ class MachineArchitecture_Instances
 		var od5 = () => new od(5);
 		var od6 = () => new od(6);
 		var od8 = () => new od(8);
-		var od10 = () => new od(10);
+		var od10 = () => new od(10); // For jump and call.
+
+		var arch = this;
 
 		var opcodes =
 		[
 			//function Opcode(name, mnemonic, value, operandDefns, run)
 			new oc("DoNothing", 		"nop", 	-1, [], 						(m, o) => { /* do nothing */ }),
 
-			new oc("Add",				"add",	-1, [od4(), od4()], 			this.add 						),
-			new oc("AddImmediate",		"addi",	-1, [od4(), od6()], 			this.addImmediate 				),
-			new oc("Call",				"call",	-1, [od10()], 					this.call 						),
-			new oc("Compare", 			"cmp", 	-1, [od4(), od4()],				this.compare 					),
-			new oc("DeviceAddress",		"devad",-1, [od4(), od4()], 			this.deviceAddress 				),
-			new oc("DeviceUpdate", 		"devup",-1, [od4()],					this.deviceUpdate 				),
-			new oc("Divide",			"div",	-1, [od4(), od4()], 			this.divide 					),
-			new oc("Halt",				"halt",	-1, [], 						this.halt 						),
-			new oc("Jump",				"jmp", 	-1, [od10()], 					this.jump 						),
-			new oc("JumpIfEqual", 		"jeq",  -1, [od10()], 					this.jumpIfEqual 				),
-			new oc("JumpIfGreater",		"jgt",  -1, [od10()], 					this.jumpIfGreaterThan 			),
-			new oc("JumpIfGTE",			"jgte", -1, [od10()], 					this.jumpIfGreaterThanOrEqual 	),
-			new oc("JumpIfLess",		"jlt",  -1, [od10()], 					this.jumpIfLess 				),
-			new oc("JumpIfLTE",			"jlte", -1, [od10()], 					this.jumpIfLessThanOrEqual 		),
-			new oc("JumpIfNotEqual",	"jne", 	-1, [od10()], 					this.jumpIfNotEqual 			),
-			new oc("Load", 				"load", -1, [od4(), od4()], 			this.load 						),
-			new oc("LoadImmediate", 	"loadi", -1,[od4(), od6()], 			this.loadImmediate 				),
-			new oc("Loop",				"loop",	-1, [od10()], 					this.loop 						),
-			new oc("MemoryCopy",		"mcopy",-1, [od3(), od3(), od3()], 		this.memoryCopy 				),
-			new oc("Move",				"mov",	-1, [od5(), od5()], 			this.move 						),
-			new oc("Pop",				"pop",	-1, [od4()], 					this.pop 						),
-			new oc("Push",				"push",	-1, [od4()], 					this.push						),
-			new oc("Return",			"ret", 	-1, [od10()], 					this._return 					),
-			new oc("Set", 				"set", 	-1, [od2(), od8()], 			this.set 						),
-			new oc("SetByteLow",		"setbl",-1, [od2(), od8()],				this.setByteLow					), 
-			new oc("SetByteHigh",		"setbh",-1, [od2(), od8()],				this.setByteHigh				),
-			new oc("SetCodeSegment",	"setcs",-1, [od10()],					this.setCodeSegment 			),
-			new oc("Store", 			"stor",-1,  [od4(), new od(4, true)], 	this.store 						),
-			new oc("StoreImmediate",	"stori",-1, [od4(), od6()], 			this.storeImmediate 			),
-			new oc("Subtract",			"sub",	-1, [od4(), od4()], 			this.subtract 					),
-			new oc("SubtractImmediate",	"subi",	-1, [od4(), od6()], 			this.subtractImmediate 			)
+			new oc("Add",				"add",	-1, [od4(), od4()], 			(m, o) => arch.add(m, o) 						),
+			new oc("AddImmediate",		"addi",	-1, [od4(), od6()], 			(m, o) => arch.addImmediate(m, o) 				),
+			new oc("Call",				"call",	-1, [od10()], 					(m, o) => arch.call(m, o) 						),
+			new oc("Compare", 			"cmp", 	-1, [od4(), od4()],				(m, o) => arch.compare(m, o) 					),
+			new oc("DeviceAddress",		"devad",-1, [od4(), od4()], 			(m, o) => arch.deviceAddress(m, o) 				),
+			new oc("DeviceUpdate", 		"devup",-1, [od4()],					(m, o) => arch.deviceUpdate(m, o) 				),
+			new oc("Divide",			"div",	-1, [od4(), od4()], 			(m, o) => arch.divide(m, o) 					),
+			new oc("Halt",				"halt",	-1, [], 						(m, o) => arch.halt(m, o) 						),
+			new oc("Jump",				"jump", -1, [od10()], 					(m, o) => arch.jump(m, o) 						),
+			new oc("JumpIfEqual", 		"jeq",  -1, [od10()], 					(m, o) => arch.jumpIfEqual(m, o) 				),
+			new oc("JumpIfGreater",		"jgt",  -1, [od10()], 					(m, o) => arch.jumpIfGreaterThan(m, o) 			),
+			new oc("JumpIfGTE",			"jgte", -1, [od10()], 					(m, o) => arch.jumpIfGreaterThanOrEqual(m, o) 	),
+			new oc("JumpIfLess",		"jlt",  -1, [od10()], 					(m, o) => arch.jumpIfLess(m, o) 				),
+			new oc("JumpIfLTE",			"jlte", -1, [od10()], 					(m, o) => arch.jumpIfLessThanOrEqual(m, o) 		),
+			new oc("JumpIfNotEqual",	"jne", 	-1, [od10()], 					(m, o) => arch.jumpIfNotEqual(m, o) 			),
+			new oc("Load", 				"load", -1, [od4(), od4()], 			(m, o) => arch.load(m, o) 						),
+			new oc("LoadImmediate", 	"loadi", -1,[od4(), od6()], 			(m, o) => arch.loadImmediate(m, o) 				),
+			new oc("Loop",				"loop",	-1, [od10()], 					(m, o) => arch.loop(m, o) 						),
+			new oc("MemoryCopy",		"mcopy",-1, [od3(), od3(), od3()], 		(m, o) => arch.memoryCopy(m, o) 				),
+			new oc("Move",				"mov",	-1, [od5(), od5()], 			(m, o) => arch.move(m, o) 						),
+			new oc("Pop",				"pop",	-1, [od4()], 					(m, o) => arch.pop(m, o) 						),
+			new oc("Push",				"push",	-1, [od4()], 					(m, o) => arch.push(m, o)						),
+			new oc("Return",			"ret", 	-1, [od10()], 					(m, o) => arch._return(m, o) 					),
+			new oc("Set", 				"set", 	-1, [od2(), od8()], 			(m, o) => arch.set(m, o) 						),
+			new oc("SetByteLow",		"setlo",-1, [od2(), od8()],				(m, o) => arch.setByteLow(m, o)					), 
+			new oc("SetByteHigh",		"sethi",-1, [od2(), od8()],				(m, o) => arch.setByteHigh(m, o)				),
+			new oc("SetCodeSegment",	"setcs",-1, [od10()],					(m, o) => arch.setCodeSegment(m, o) 			),
+			new oc("ShiftLeft",			"shftl",-1, [od4(), od4()], 			(m, o) => arch.shiftLeft(m, o) 					),
+			new oc("Store", 			"stor",-1,  [od4(), new od(4, true)], 	(m, o) => arch.store(m, o) 						),
+			new oc("StoreImmediate",	"stori",-1, [od4(), od6()], 			(m, o) => arch.storeImmediate(m, o) 			),
+			new oc("Subtract",			"sub",	-1, [od4(), od4()], 			(m, o) => arch.subtract(m, o) 					),
+			new oc("SubtractImmediate",	"subi",	-1, [od4(), od6()], 			(m, o) => arch.subtractImmediate(m, o) 			)
 		];
 
 		for (var i = 0; i < opcodes.length; i++)
@@ -166,8 +176,6 @@ class MachineArchitecture_Instances
 
 	call(machine, operands)
 	{
-		var operand0Value = operands[0].value();
-
 		var registerStackPointer = machine.registerStackPointer();
 		registerStackPointer.valueAdd(-1);
 
@@ -178,10 +186,10 @@ class MachineArchitecture_Instances
 			registerInstructionPointer.value()
 		);
 
-		var cs = machine.registerCodeSegment().value();
-		var ipValueNext = (cs << 8) | operand0Value;
+		var ipNext =
+			this.ipNextCalculateFromCsAndOperand(machine, operands[0]);
 
-		registerInstructionPointer.valueSet(ipValueNext);
+		registerInstructionPointer.valueSet(ipNext);
 	}
 
 	compare(machine, operands)
@@ -237,11 +245,9 @@ class MachineArchitecture_Instances
 
 	jump(machine, operands)
 	{
-		var operand0Value = operands[0].value();
 		var ip = machine.registerInstructionPointer();
-		var cs = machine.registerCodeSegment();
-		var csValue = cs.value();
-		var ipNext = (csValue << 8) | operand0Value;
+		var ipNext =
+			this.ipNextCalculateFromCsAndOperand(machine, operands[0]);
 		ip.valueSet(ipNext);
 	}
 
@@ -250,12 +256,10 @@ class MachineArchitecture_Instances
 		var cr = machine.registerComparisonResult();
 		if (cr.value() == 0)
 		{
-			var cs = machine.registerCodeSegment();
-			var csValue = cs.value();
-			var operand0Value = operands[0].value;
-			var valueNext = (csValue << 8) | operand0Value;
+			var ipNext =
+				this.ipNextCalculateFromCsAndOperand(machine, operands[0]);
 			var ip = machine.registerInstructionPointer();
-			ip.valueSet(valueNext);
+			ip.valueSet(ipNext);
 		}
 	}
 
@@ -264,12 +268,10 @@ class MachineArchitecture_Instances
 		var cr = machine.registerComparisonResult();
 		if (cr.value() > 0)
 		{
-			var cs = machine.registerCodeSegment();
-			var csValue = cs.value();
-			var operand0Value = operands[0].value;
-			var valueNext = (csValue << 8) | operand0Value;
+			var ipNext =
+				this.ipNextCalculateFromCsAndOperand(machine, operands[0]);
 			var ip = machine.registerInstructionPointer();
-			ip.valueSet(valueNext);
+			ip.valueSet(ipNext);
 		}
 	}
 
@@ -278,12 +280,10 @@ class MachineArchitecture_Instances
 		var cr = machine.registerComparisonResult();
 		if (cr.value() >= 0)
 		{
-			var cs = machine.registerCodeSegment();
-			var csValue = cs.value();
-			var operand0Value = operands[0].value;
-			var valueNext = (csValue << 8) | operand0Value;
+			var ipNext =
+				this.ipNextCalculateFromCsAndOperand(machine, operands[0]);
 			var ip = machine.registerInstructionPointer();
-			ip.valueSet(valueNext);
+			ip.valueSet(ipNext);
 		}
 	}
 
@@ -292,12 +292,10 @@ class MachineArchitecture_Instances
 		var cr = machine.registerComparisonResult();
 		if (cr.value() < 0)
 		{
-			var cs = machine.registerCodeSegment();
-			var csValue = cs.value();
-			var operand0Value = operands[0].value();
-			var valueNext = (csValue << 8) | operand0Value;
+			var ipNext =
+				this.ipNextCalculateFromCsAndOperand(machine, operands[0]);
 			var ip = machine.registerInstructionPointer();
-			ip.valueSet(valueNext);
+			ip.valueSet(ipNext);
 		}
 	}
 
@@ -306,12 +304,10 @@ class MachineArchitecture_Instances
 		var cr = machine.registerComparisonResult();
 		if (cr.value() <= 0)
 		{
-			var cs = machine.registerCodeSegment();
-			var csValue = cs.value();
-			var operand0Value = operands[0].value();
-			var valueNext = (csValue << 8) | operand0Value;
+			var ipNext =
+				this.ipNextCalculateFromCsAndOperand(machine, operands[0]);
 			var ip = machine.registerInstructionPointer();
-			ip.valueSet(valueNext);
+			ip.valueSet(ipNext);
 		}
 	}
 
@@ -341,10 +337,9 @@ class MachineArchitecture_Instances
 		if (cxValue > 0)
 		{
 			var ip = machine.registerInstructionPointer();
-			var cs = machine.registerCodeSegment().value();
-			var operand0Value = operands[0].value();
-			var valueNext = (cs << 8) | operand0Value;
-			ip.valueSet(valueNext);
+			var ipNext =
+				this.ipNextCalculateFromCsAndOperand(machine, operands[0]);
+			ip.valueSet(ipNext);
 		}
 	}
 
@@ -390,37 +385,44 @@ class MachineArchitecture_Instances
 
 	pop(machine, operands)
 	{
-		var operand0Value = operands[0].value();
-		var sp = machine.registerStackPointer();
-		var registerTarget = machine.registerAtIndex(operand0Value);
-		var memoryCellIndex = sp.value();
-		var value = machine.memoryCellAtAddress(memoryCellIndex);
-		registerTarget.valueSet(value);
-		sp.valueIncrement();
+		var registerStackPointer = machine.registerStackPointer();
+		var addressToPopFrom = registerStackPointer.value();
+		var valuePoppedFromStack =
+			machine.memoryCellAtAddress(addressToPopFrom);
+
+		var registerTargetIndex = operands[0].value();
+		var registerTarget = machine.registerAtIndex(registerTargetIndex);
+		registerTarget.valueSet(valuePoppedFromStack);
+
+		registerStackPointer.valueIncrement();
 	}
 
 	push(machine, operands)
 	{
-		var operand0Value = operands[0].value();
-		var sp = machine.registerStackPointer();
-		sp.valueDecrement();
-		var valueNext = machine.registerAtIndex(operand0Value);
+		var registerToPushIndex = operands[0].value();
+		var registerToPush = machine.registerAtIndex(registerToPushIndex);
+		var valueToPushToStack = registerToPush.value();
+
+		var registerStackPointer = machine.registerStackPointer();
+		registerStackPointer.valueDecrement();
+		var addressToPushTo = registerStackPointer.value();
+
 		machine.memoryCellAtAddressSet
 		(
-			operand0Value,
-			valueNext
+			addressToPushTo,
+			valueToPushToStack
 		);
 	}
 
 	_return(machine, operands)
 	{
-		var sp = machine.registerStackPointer();
-		var memoryCellIndex = sp.value();
-		var memoryCell = machine.memoryCellAtAddress(memoryCellIndex);
-		var ip = machine.registerInstructionPointer();
-		ip.valueSet(valueNext);
+		var registerStackPointer = machine.registerStackPointer();
+		var stackAddress = registerStackPointer.value();
+		var addressToReturnTo = machine.memoryCellAtAddress(stackAddress);
+		var registerInstructionPointer = machine.registerInstructionPointer();
+		registerInstructionPointer.valueSet(addressToReturnTo);
 		var offset = operands[0].value();
-		sp.add(offset);
+		registerStackPointer.valueAdd(offset);
 	}
 
 	set(machine, operands)
@@ -460,6 +462,14 @@ class MachineArchitecture_Instances
 		cs.valueSet(operand0Value);
 	}
 
+	shiftLeft(machine, operands)
+	{
+		var registerTargetIndex = operands[0].value();
+		var registerTarget = machine.registerAtIndex(registerTargetIndex);
+		var placesToShift = operands[1].value();
+		registerTarget.valueShiftLeft(placesToShift);
+	}
+
 	store(machine, operands)
 	{
 		var operand0Value = operands[0].value();
@@ -487,11 +497,27 @@ class MachineArchitecture_Instances
 		registerTarget.valueAdd(0 - decrement);
 	}
 
-	subtract(machine, operands)
+	subtractImmediate(machine, operands)
 	{
 		var operand0Value = operands[0].value();
 		var decrement = operands[1].value();
 		var registerTarget = machine.registerAtIndex(operand0Value);
 		registerTarget.valueAdd(0 - decrement);
+	}
+
+	// Helpers.
+
+	ipNextCalculateFromCsAndOperand(machine, operandOffsetImmediate)
+	{
+		var registerCodeSegment = machine.registerCodeSegment();
+		var segmentIndex = registerCodeSegment.value();
+		var architecture = machine.architecture();
+		var segmentStartAddress =
+			segmentIndex << architecture.segmentOffsetWidthInBits;
+		var offsetFromStartOfSegment =
+			operandOffsetImmediate.value();
+		var ipValueNext =
+			segmentStartAddress | offsetFromStartOfSegment;
+		return ipValueNext;
 	}
 }

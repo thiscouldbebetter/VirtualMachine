@@ -33,4 +33,10 @@ class Register
 		this._value = valueToSet;
 		return this;
 	}
+
+	valueShiftLeft(placesToShift)
+	{
+		return this.valueSet(this.value() << placesToShift);
+	}
+
 }
