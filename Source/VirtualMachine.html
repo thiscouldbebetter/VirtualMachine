@@ -10,8 +10,31 @@
 		running a hardcoded program.  This is a work in progress.
 	</p>
 
-	<div id="divDisplay">
-		[Loading...]
+	<div>
+		<label for="">Assembly to Run:</label>
+		<button onclick="UiEventHandler.buttonDemo_Clicked()">
+			Load Demo
+		</button>
+		<br />
+		<textarea
+			id="textareaAssembly"
+			cols="64" rows="16"
+		></textarea>
+	</div>
+
+	<div>
+		<button onclick="UiEventHandler.buttonRun_Clicked()">
+			Run
+		</button>
+	</div>
+
+	<div>
+		<div>
+			<label for="divDisplay">Virtual Machine Display:</label>
+		</div>
+		<div id="divDisplay">
+			[Click Run to start.]
+		</div>
 	</div>
 
 </div>
@@ -45,12 +68,9 @@
 <script type="text/javascript" src="Program.js"></script>
 <script type="text/javascript" src="RegisterDefn.js"></script>
 <script type="text/javascript" src="Register.js"></script>
+<script type="text/javascript" src="UiEventHandler.js"></script>
 
-<script type="text/javascript" src="VirtualizationTest.js"></script>
-
-<script type="text/javascript">
-	new VirtualizationTest().main();
-</script>
+<script type="text/javascript" src="Demo.js"></script>
 
 </body>
 </html>

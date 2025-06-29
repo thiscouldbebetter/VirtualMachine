@@ -18,6 +18,11 @@ class Register
 		return this.valueSet(this.value() + 1);
 	}
 
+	valueDecrement()
+	{
+		return this.valueAdd(-1);
+	}
+
 	valueIncrement()
 	{
 		return this.valueAdd(1);

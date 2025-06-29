@@ -73,42 +73,54 @@ class Disk
 		}
 		else
 		{
-			throw new Error("Unrecognized disk device operation: " + operationToPerform);
+			var errorMessage =
+				"Unrecognized disk device operation: "
+				+ operationToPerform;
+			throw new Error(errorMessage);
 		}
 	};
 
 	readToMemory(diskAddress, machineAddress, numberOfCellsToRead)
 	{
-		ArrayHelper.overwriteArrayWithOther
+		ArrayHelper.overwriteSourceAtIndexWithTargetAtIndexForCount
 		(
+			// source
 			this.memoryCells,
 			diskAddress,
+			// target
 			this.device.machine.memoryCells,
 			machineAddress,
+			// count
 			numberOfCellsToRead
 		);
 	}
 
 	writeFromMemory(machine, machineAddress, diskAddress, numberOfCellsToWrite)
 	{
-		ArrayHelper.overwriteArrayWithOther
+		ArrayHelper.overwriteSourceAtIndexWithTargetAtIndexForCount
 		(
+			// source
 			this.device.machine.memoryCells,
 			machineAddress,
+			// target
 			this.memoryCells,
 			diskAddress,
+			// count
 			numberOfCellsToWrite
 		);
 	}
 
 	writeMemoryCells(diskAddress, memoryCellsToWrite)
 	{
-		ArrayHelper.overwriteArrayWithOther
+		ArrayHelper.overwriteSourceAtIndexWithTargetAtIndexForCount
 		(
+			// source
 			memoryCellsToWrite,
 			0,
+			// target
 			this.memoryCells,
 			diskAddress,
+			// count
 			memoryCellsToWrite.length
 		);
 	}

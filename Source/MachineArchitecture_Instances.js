@@ -9,7 +9,7 @@ class MachineArchitecture_Instances
 
 		var syntax = AssemblyLanguageSyntax.Instances().Default;
 
-		var bootProgramAsLines = this.bootProgramAsLines();
+		var bootProgramText = this.bootProgramText();
 
 		this.Default = new MachineArchitecture
 		(
@@ -21,32 +21,35 @@ class MachineArchitecture_Instances
 			registerDefns,
 			instructionSet,
 			syntax,
-			bootProgramAsLines
+			bootProgramText
 		);
 	}
 
-	bootProgramAsLines()
+	bootProgramText()
 	{
 		var bootProgramAsLines =
 		[
-			"set ax, 0		; ax = deviceID 0 (disk)",
-			"devad si, ax 	; si = disk",
-			"mov di, si		; di = disk.operation",
-			"stori di, 0 	; disk.operation = read",
-			"addi di, 1		; di = disk.diskAddress",
-			"stori di, 0	; disk.diskAddress = 0",
-			"addi di, 1		; di = disk.memoryAddress",
-			"setbh dx, 1 	; dx = memory address for 2nd stage boot",
-			"setbl dx, 0	; (address of segment 1)",
-			"stor di, dx  	; disk.memoryAddress = 2nd stage boot",
-			"addi di, 1		; di = disk.numberOfCellsToMove",
-			"stori di, 32	; disk.numberOfCellsToMove = 32",
-			"devup ax		; disk.update()",
-			"setcs 1		; prepare to jump to segment 1",
-			"jmp 0			; to 2nd stage boot",
+			"set ax, 0      ; ax = deviceID 0 (disk)",
+			"devad si, ax   ; si = disk",
+			"mov di, si     ; di = disk.operation",
+			"stori di, 0    ; disk.operation = read",
+			"addi di, 1     ; di = disk.diskAddress",
+			"stori di, 0    ; disk.diskAddress = 0",
+			"addi di, 1     ; di = disk.memoryAddress",
+			"setbh dx, 1    ; dh = memory address for 2nd stage boot",
+			"setbl dx, 0    ; dl = address of segment 1",
+			"stor di, dx    ; disk.memoryAddress = 2nd stage boot",
+			"addi di, 1     ; di = disk.numberOfCellsToMove",
+			"stori di, 32   ; disk.numberOfCellsToMove = 32",
+			"devup ax       ; disk.update()",
+			"setcs 1        ; prepare to jump to segment 1",
+			"jmp 0          ; to 2nd stage boot",
+			"halt           ; Upon returning, halt."
 		];
 
-		return bootProgramAsLines;
+		var newline = "\n";
+		var bootProgramText = bootProgramAsLines.join(newline);
+		return bootProgramText;
 	}
 
 	instructionSet()
@@ -64,7 +67,7 @@ class MachineArchitecture_Instances
 		var opcodes =
 		[
 			//function Opcode(name, mnemonic, value, operandDefns, run)
-			new oc("DoNothing", "nop", 	-1, [], 						(m, o) => { /* do nothing */ }),
+			new oc("DoNothing", 		"nop", 	-1, [], 						(m, o) => { /* do nothing */ }),
 
 			new oc("Add",				"add",	-1, [od4(), od4()], 			this.add 						),
 			new oc("AddImmediate",		"addi",	-1, [od4(), od6()], 			this.addImmediate 				),
@@ -73,6 +76,7 @@ class MachineArchitecture_Instances
 			new oc("DeviceAddress",		"devad",-1, [od4(), od4()], 			this.deviceAddress 				),
 			new oc("DeviceUpdate", 		"devup",-1, [od4()],					this.deviceUpdate 				),
 			new oc("Divide",			"div",	-1, [od4(), od4()], 			this.divide 					),
+			new oc("Halt",				"halt",	-1, [], 						this.halt 						),
 			new oc("Jump",				"jmp", 	-1, [od10()], 					this.jump 						),
 			new oc("JumpIfEqual", 		"jeq",  -1, [od10()], 					this.jumpIfEqual 				),
 			new oc("JumpIfGreater",		"jgt",  -1, [od10()], 					this.jumpIfGreaterThan 			),
@@ -168,14 +172,14 @@ class MachineArchitecture_Instances
 		registerStackPointer.valueAdd(-1);
 
 		var registerInstructionPointer = machine.registerInstructionPointer();
-		machine.memoryCellAtIndexSetToValue
+		machine.memoryCellAtAddressSet
 		(
 			registerStackPointer.value(),
 			registerInstructionPointer.value()
 		);
 
-		var registerCs = machine.registerCs();
-		var ipValueNext = registerCs.value() << 8 | operand0Value;
+		var cs = machine.registerCodeSegment().value();
+		var ipValueNext = (cs << 8) | operand0Value;
 
 		registerInstructionPointer.valueSet(ipValueNext);
 	}
@@ -223,6 +227,12 @@ class MachineArchitecture_Instances
 		var divisor = machine.registerAtIndex(operand1Value).value();
 		var quotient = dividend / divisor;
 		registerTarget.valueSet(quotient);
+	}
+
+	halt(machine, operands)
+	{
+		var ip = machine.registerInstructionPointer();
+		ip.decrement(); // Keep running this same instruction forever.
 	}
 
 	jump(machine, operands)
@@ -331,7 +341,7 @@ class MachineArchitecture_Instances
 		if (cxValue > 0)
 		{
 			var ip = machine.registerInstructionPointer();
-			var cs = machine.registerCs().value();
+			var cs = machine.registerCodeSegment().value();
 			var operand0Value = operands[0].value();
 			var valueNext = (cs << 8) | operand0Value;
 			ip.valueSet(valueNext);
@@ -344,15 +354,27 @@ class MachineArchitecture_Instances
 		var operand1Value = operands[1].value();
 		var operand2Value = operands[2].value();
 
+		var targetStartIndex =
+			machine.registerAtIndex(operand0Value).value;
+		var sourceStartIndex =
+			machine.registerAtIndex(operand1Value).value;
+		var count =
+			machine.registerAtIndex(operand2Value).value;
+
 		var memoryCells = machine.memoryCells;
 
-		ArrayHelper.overwriteArrayWithOther
+		// If the source and target overlap,
+		// unexpected things may happen.
+
+		ArrayHelper.overwriteSourceAtIndexWithTargetAtIndexForCount
 		(
+			// source
 			memoryCells,
-			machine.registerAtIndex(operand1Value).value,
+			sourceStartIndex,
+			// target
 			memoryCells,
-			machine.registerAtIndex(operand0Value).value,
-			machine.registerAtIndex(operand2Value).value
+			targetStartIndex,
+			count
 		);
 	}
 
@@ -372,7 +394,7 @@ class MachineArchitecture_Instances
 		var sp = machine.registerStackPointer();
 		var registerTarget = machine.registerAtIndex(operand0Value);
 		var memoryCellIndex = sp.value();
-		var value = machine.memoryCellAtIndex(memoryCellIndex);
+		var value = machine.memoryCellAtAddress(memoryCellIndex);
 		registerTarget.valueSet(value);
 		sp.valueIncrement();
 	}
@@ -381,9 +403,9 @@ class MachineArchitecture_Instances
 	{
 		var operand0Value = operands[0].value();
 		var sp = machine.registerStackPointer();
-		sp.decrement();
+		sp.valueDecrement();
 		var valueNext = machine.registerAtIndex(operand0Value);
-		machine.memoryCellAtIndexValueSet
+		machine.memoryCellAtAddressSet
 		(
 			operand0Value,
 			valueNext
@@ -393,7 +415,8 @@ class MachineArchitecture_Instances
 	_return(machine, operands)
 	{
 		var sp = machine.registerStackPointer();
-		var memoryCell = machine.memoryCellAtIndex(sp.value() );
+		var memoryCellIndex = sp.value();
+		var memoryCell = machine.memoryCellAtAddress(memoryCellIndex);
 		var ip = machine.registerInstructionPointer();
 		ip.valueSet(valueNext);
 		var offset = operands[0].value();
@@ -413,8 +436,9 @@ class MachineArchitecture_Instances
 		var operand0Value = operands[0].value();
 		var operand1Value = operands[1].value();
 		var registerTarget = machine.registerAtIndex(operand0Value);
-		var registerSource = machine.registerAtIndex(operand1Value).value();
-		var valueNext = (registerSource & 0xFF00) | operand1Value;
+		var valueNext = 
+			(registerTarget.value() & 0xFF00)
+			| (operand1Value << MachineArchitecture.BitsPerByte);
 		registerTarget.valueSet(valueNext);
 	}
 
@@ -425,8 +449,7 @@ class MachineArchitecture_Instances
 		var registerTarget = machine.registerAtIndex(operand0Value);
 		var valueNext = 
 			(registerTarget.value() & 0x00FF)
-			| operand1Value
-			<< MachineArchitecture.BitsPerByte;
+			| (operand1Value << MachineArchitecture.BitsPerByte);
 		registerTarget.valueSet(valueNext);
 	}
 
@@ -443,7 +466,7 @@ class MachineArchitecture_Instances
 		var operand1Value = operands[1].value();
 		var memoryCellIndex = machine.registerAtIndex(operand0Value).value();
 		var valueToStore = machine.registerAtIndex(operand1Value).value();
-		machine.memoryCellAtIndexSetToValue(memoryCellIndex, valueToStore);
+		machine.memoryCellAtAddressSet(memoryCellIndex, valueToStore);
 	}
 
 	storeImmediate(machine, operands)
@@ -451,7 +474,7 @@ class MachineArchitecture_Instances
 		var operand0Value = operands[0].value();
 		var operand1Value = operands[1].value();
 		var memoryCellIndex = machine.registerAtIndex(operand0Value).value();
-		machine.memoryCellAtIndexSetToValue(memoryCellIndex, operand1Value);
+		machine.memoryCellAtAddressSet(memoryCellIndex, operand1Value);
 	}
 
 	subtract(machine, operands)

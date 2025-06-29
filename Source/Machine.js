@@ -77,20 +77,29 @@ class Machine
 		}
 	}
 
-	memoryCellAtIndexSetToValue(memoryCellIndex, value)
+	memoryCellAtAddress(memoryCellIndex)
+	{
+		return this.memoryCells[memoryCellIndex];
+	}
+
+	memoryCellAtAddressSet(memoryCellIndex, value)
 	{
 		this.memoryCells[memoryCellIndex] = value;
+		return this;
 	}
 
 	memoryWriteCells(cellsToWrite, addressToWriteTo)
 	{
-		ArrayHelper.overwriteArrayWithOther
+		ArrayHelper.overwriteSourceAtIndexWithTargetAtIndexForCount
 		(
+			// source
 			cellsToWrite,
-			0, 
+			0,
+			// target
 			this.memoryCells,
 			addressToWriteTo,
-			cellsToWrite.length	
+			// count
+			cellsToWrite.length
 		);
 	}
 
@@ -134,17 +143,6 @@ class Machine
 	}
 
 	// Convenience abbreviations.
-
-	memoryCellAtIndex(memoryCellIndex)
-	{
-		return this.memoryCells[memoryCellIndex];
-	}
-
-	memoryCellAtIndexValue(memoryCellIndex, value)
-	{
-		this.memoryCells[memoryCellIndex] = value;
-		return this;
-	}
 
 	registerAtIndex(registerIndex)
 	{

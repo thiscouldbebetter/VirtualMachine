@@ -3,7 +3,7 @@
 
 class ArrayHelper
 {
-	static overwriteArrayWithOther
+	static overwriteSourceAtIndexWithTargetAtIndexForCount
 	(
 		sourceArray,
 		sourceStartIndex,
@@ -14,7 +14,11 @@ class ArrayHelper
 	{
 		for (var i = 0; i < numberOfItemsToOverwrite; i++)
 		{
-			targetArray[targetStartIndex + i] = sourceArray[sourceStartIndex + i];
+			var sourceElement =
+				sourceArray[sourceStartIndex + i];
+
+			targetArray[targetStartIndex + i] =
+				sourceElement;
 		}
 	}
 }

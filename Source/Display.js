@@ -77,7 +77,7 @@ class Display
 		}
 		else if (operationToPerform == operationValues.Write)
 		{
-			machine.memoryCellAtAddressSetToValue(charAddress, charValue);
+			machine.memoryCellAtAddressSet(charAddress, charValue);
 			display.update(this);
 		}
 	}

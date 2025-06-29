@@ -11,7 +11,7 @@ class MachineArchitecture
 		registerDefns,
 		instructionSet,
 		assemblyLanguageSyntax,
-		bootProgramLines
+		bootProgramText
 	)
 	{
 		this.name = name;
@@ -25,12 +25,12 @@ class MachineArchitecture
 		this.registerAbbreviationToIndexLookup =
 			new Map(this.registerDefns.map( (x, i) => [x.abbreviation, i] ) );
 
-		this.bootProgram = Program.fromLinesAssembly
+		this.bootProgram = Program.fromAssembly
 		(
 			"Boot Routine",
 			this,
 			assemblyLanguageSyntax,
-			bootProgramLines
+			bootProgramText
 		);
 	}
 

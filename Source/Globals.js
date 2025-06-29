@@ -16,11 +16,16 @@ class Globals
 
 		this.machine.boot();
 
-		setInterval(Globals.Instance().tick, millisecondsPerTick);
+		setInterval
+		(
+			() => this.tick(),
+			millisecondsPerTick
+		);
 	}
 
 	tick()
 	{
-		Globals.Instance().machine.tick();
+		var globals = Globals.Instance();
+		globals.machine.tick();
 	}
 }

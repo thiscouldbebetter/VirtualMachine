@@ -7,12 +7,12 @@ class Program
 		this.instructions = instructions;
 	}
 
-	static fromLinesAssembly
+	static fromAssembly
 	(
 		name,
 		architecture,
 		assemblyLanguageSyntax,
-		programLines
+		programText
 	)
 	{
 		var instructionsSoFar = [];
@@ -20,6 +20,9 @@ class Program
 		var mnemonicToOpcodeLookup =
 			architecture.instructionSet.mnemonicToOpcodeLookup;
 		var errorsSoFar = [];
+
+		var newline = "\n";
+		var programLines = programText.split(newline);
 
 		for (var i = 0; i < programLines.length; i++)
 		{
@@ -45,7 +48,7 @@ class Program
 
 			if (programLine.length > 0)
 			{
-				Program.fromLinesAssembly_ParseLabelOrInstruction
+				this.fromLinesAssembly_ParseLabelOrInstruction
 				(
 					programLine,
 					architecture,
@@ -113,7 +116,7 @@ class Program
 	{
 		if (programLine.indexOf(":") == programLine.length - 1)
 		{
-			Program.fromLinesAssembly_ParseLabel
+			this.fromLinesAssembly_ParseLabel
 			(
 				programLine,
 				architecture,
@@ -125,7 +128,7 @@ class Program
 		}
 		else if (programLine.indexOf("data") == 0)
 		{
-			Program.fromLinesAssembly_ParseData
+			this.fromLinesAssembly_ParseData
 			(
 				programLine,
 				architecture,
@@ -137,7 +140,7 @@ class Program
 		}
 		else
 		{
-			Program.fromLinesAssembly_ParseInstruction
+			this.fromLinesAssembly_ParseInstruction
 			(
 				programLine,
 				architecture,
@@ -280,7 +283,7 @@ class Program
 		}
 		else
 		{
-			Program.fromLinesAssembly_ParseInstruction_Operands
+			this.fromLinesAssembly_ParseInstruction_Operands
 			(
 				programLine, 
 				architecture,
@@ -342,7 +345,7 @@ class Program
 	static fromStringAssembly(architecture, programAsString)
 	{
 		var newline = "\r\n";
-		var returnValue = Program.fromLinesAssembly
+		var returnValue = this.fromLinesAssembly
 		(
 			architecture,
 			programAsString.split(newline)
